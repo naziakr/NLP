@@ -1,0 +1,31 @@
+#importing necessary libraries 
+import spacy
+​
+nlp = spacy.load("en_core_web_sm")  #creating an object and loading the pre-trained model for "English"
+Excersie: 1 Extract all the Geographical (cities, Countries, states) names from a given text
+
+text = """Kiran want to know the famous foods in each state of India. So, he opened Google and search for this question. Google showed that
+in Delhi it is Chaat, in Gujarat it is Dal Dhokli, in Tamilnadu it is Pongal, in Andhrapradesh it is Biryani, in Assam it is Papaya Khar,
+in Bihar it is Litti Chowkha and so on for all other states"""
+​
+doc = nlp(text)
+
+locations = []
+for ent in doc.ents:
+    if ent.label_ == "GPE":
+        locations.append(ent.text)
+print(locations)
+['India', 'Delhi', 'Gujarat', 'Tamilnadu', 'Pongal', 'Andhrapradesh', 'Assam', 'Bihar']
+Excersie: 2 Extract all the birth dates of cricketers in the given Text
+
+text = """Sachin Tendulkar was born on 24 April 1973, Virat Kholi was born on 5 November 1988, Dhoni was born on 7 July 1981
+and finally Ricky ponting was born on 19 December 1974."""
+​
+doc = nlp(text)
+dates
+dates = []
+for ent in doc.ents:
+    if ent.label_ == "DATE":
+        dates.append(ent.text)
+print(dates)
+['24 April 1973', '5 November 1988', '7 July 1981', '19 December 1974']
