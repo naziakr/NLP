@@ -1,0 +1,133 @@
+Bag of words: Exercises In this Exercise, you are going to classify whether a given movie review is positive or negative. 
+you are going to use Bag of words for pre-processing the text and apply different classification algorithms. 
+Sklearn CountVectorizer has the inbuilt implementations for Bag of Words.
+
+
+#Import necessary libraries
+​
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report
+About Data: IMDB Dataset Credits: https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews?resource=download
+
+This data consists of two columns. - review - sentiment Reviews are the statements given by users after watching the movie. sentiment feature tells whether the given review is positive or negative
+
+#1. read the data provided in the same directory
+df = pd.read_csv("IMDB Dataset.csv")
+0:5
+​
+#2. print the shape of the data
+df.shape
+​
+#3. print top 5 datapoints
+df[0:5]
+review	sentiment
+0	One of the other reviewers has mentioned that ...	positive
+1	A wonderful little production. <br /><br />The...	positive
+2	I thought this was a wonderful way to spend ti...	positive
+3	Basically there's a family where a little boy ...	negative
+4	Petter Mattei's "Love in the Time of Money" is...	positive
+"].apply
+#creating a new column "Category" which represent 1 if the sentiment is positive or 0 if it is negative
+​
+df["Category"] = df["sentiment"].apply(lambda x: 1 if x=="positive" else 0)
+#check the distribution of 'Category' and see whether the Target labels are balanced or not.
+df.head()
+review	sentiment	Category
+0	One of the other reviewers has mentioned that ...	positive	1
+1	A wonderful little production. <br /><br />The...	positive	1
+2	I thought this was a wonderful way to spend ti...	positive	1
+3	Basically there's a family where a little boy ...	negative	0
+4	Petter Mattei's "Love in the Time of Money" is...	positive	1
+df.shape
+df.shape
+(50000, 3)
+_size
+#Do the 'train-test' splitting with test size of 20%
+​
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(df.review, df.Category, test_size = 0.2)
+Exercise-1
+
+using sklearn pipeline module create a classification pipeline to classify the movie review's positive or negative. Note:
+
+use CountVectorizer for pre-processing the text.
+
+use Random Forest as the classifier with estimators as 50 and criterion as entropy.
+
+print the classification report.
+
+#2. fit with X_train and y_train
+
+clf.fit(X_train, y_train)
+
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+
+
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+#1. create a pipeline object
+​
+clf = Pipeline([
+    ("vectorizer", CountVectorizer()),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+​
+​
+#2. fit with X_train and y_train
+​
+clf.fit(X_train, y_train)
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.85      0.84      0.84      5094
+           1       0.84      0.84      0.84      4906
+
+    accuracy                           0.84     10000
+   macro avg       0.84      0.84      0.84     10000
+weighted avg       0.84      0.84      0.84     10000
+
+Exercise-2
+
+using sklearn pipeline module create a classification pipeline to classify the movie review's positive or negative.. Note:
+
+use CountVectorizer for pre-processing the text. use Multinomial Naive Bayes as the classifier. print the classification report.
+
+)
+#1. create a pipeline object
+model_ = Pipeline([
+    ("vectorizer", CountVectorizer()),
+    ("nb", MultinomialNB())
+])
+​
+​
+#2. fit with X_train and y_train
+model_.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = model_.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.84      0.88      0.86      5094
+           1       0.87      0.82      0.84      4906
+
+    accuracy                           0.85     10000
+   macro avg       0.85      0.85      0.85     10000
+weighted avg       0.85      0.85      0.85     10000
