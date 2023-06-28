@@ -1,0 +1,114 @@
+#import spacy and load the model
+
+import spacy
+nlp = spacy.load("en_core_web_sm")
+
+Exercise1:
+
+From a Given Text, Count the number of stop words in it.
+Print the percentage of stop word tokens compared to all tokens in a given text.
+
+text = '''
+Thor: Love and Thunder is a 2022 American superhero film based on Marvel Comics featuring the character Thor, produced by Marvel Studios and 
+distributed by Walt Disney Studios Motion Pictures. It is the sequel to Thor: Ragnarok (2017) and the 29th film in the Marvel Cinematic Universe (MCU).
+The film is directed by Taika Waititi, who co-wrote the script with Jennifer Kaytin Robinson, and stars Chris Hemsworth as Thor alongside Christian Bale, Tessa Thompson,
+Jaimie Alexander, Waititi, Russell Crowe, and Natalie Portman. In the film, Thor attempts to find inner peace, but must return to action and recruit Valkyrie (Thompson),
+Korg (Waititi), and Jane Foster (Portman)—who is now the Mighty Thor—to stop Gorr the God Butcher (Bale) from eliminating all gods.
+'''
+
+#step1: Create the object 'doc' for the given text using nlp()
+doc = nlp(text)
+l = len(doc)
+
+#step2: define the variables to keep track of stopwords count and total words count
+from spacy.lang.en.stop_words import STOP_WORDS
+
+#step3: iterate through all the words in the document
+def preprocessing(text):
+    useful_word = [token.text for token in doc if not token.is_stop]
+    return useful_word
+
+#step4: print the count of stop words
+stop_word = l - len(preprocessing(text))
+print("Total number of stop words", stop_word)
+    
+
+#step5: print the percentage of stop words compared to total words in the text
+p = (stop_word/l)*100
+print("The percentage of stop words in the text", p, "%")
+
+Exercise2:
+
+Spacy default implementation considers "not" as a stop word. But in some scenarios removing 'not' will completely change the meaning of the statement/text. For Example, consider these two statements:
+
+- this is a good movie       ----> Positive Statement
+- this is not a good movie   ----> Negative Statement
+
+So, after applying stopwords to those 2 texts, both will return "good movie" and does not respect the polarity/sentiments of text.
+
+Now, your task is to remove this stop word "not" in spaCy and help in distinguishing the texts.
+
+
+#use this pre-processing function to pass the text and to remove all the stop words and finally get the cleaned form
+def preprocess(text):
+    doc = nlp(text)
+    no_stop_words = [token.text for token in doc if not token.is_stop]
+    return " ".join(no_stop_words)       
+
+
+#Step1: remove the stopword 'not' in spacy
+nlp.vocab["not"].is_stop = False
+
+
+#step2: send the two texts given above into the pre-process function and store the transformed texts
+positive = preprocess("this is a good movie")
+negetive = preprocess("this is not a good  movie")
+
+
+#step3: finally print those 2 transformed texts
+print(positive)
+print(negetive)
+
+From a given text, output the most frequently used token after removing all the stop word tokens and punctuations in it.
+
+text = ''' The India men's national cricket team, also known as Team India or the Men in Blue, represents India in men's international cricket.
+It is governed by the Board of Control for Cricket in India (BCCI), and is a Full Member of the International Cricket Council (ICC) with Test,
+One Day International (ODI) and Twenty20 International (T20I) status. Cricket was introduced to India by British sailors in the 18th century, and the 
+first cricket club was established in 1792. India's national cricket team played its first Test match on 25 June 1932 at Lord's, becoming the sixth team to be
+granted test cricket status.
+'''
+
+
+#step1: Create the object 'doc' for the given text using nlp()
+doc = nlp(text)
+
+
+#step2: remove all the stop words and punctuations and store all the remaining tokens in a new list
+
+no_stop_words = []
+for token in doc:
+    if token.is_stop or token.is_punct:
+        continue
+    else: no_stop_words.append(token)
+
+#step3: create a new dictionary and get the frequency of words by iterating through the list which contains stored tokens  
+
+frequency = {}
+for token in no_stop_words:
+ 
+    
+        if token not in frequency:     #if a particular token occurs for the first time, we initialise it to 1
+          frequency[token] = 1
+        else:
+          frequency[token] += 1
+       
+        
+
+
+
+#step4: get the maximum frequency word
+
+max_freq = max(frequency.keys(), key=(lambda key: frequency[key]))
+
+
+
