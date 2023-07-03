@@ -1,0 +1,514 @@
+Bag of n_grams: Exercise Fake news refers to misinformation or disinformation in the country which is spread through word of mouth and more recently through digital communication such as What's app messages, social media posts, etc.
+
+Fake news spreads faster than Real news and creates problems and fear among groups and in society.
+
+We are going to address these problems using classical NLP techniques and going to classify whether a given message/ text is Real or Fake Message.
+
+You will use a Bag of n-grams to pre-process the text and apply different classification algorithms.
+
+Sklearn CountVectorizer has the inbuilt implementations for Bag of Words.
+
+#import pandas library
+import pandas as pd
+​
+#read the dataset as csv and store it in a variable df
+df = pd.read_json('news_dataset.json', lines = True)
+​
+​
+#print the shape of dataframe
+df.shape
+​
+#print top 5 rows
+df.head()
+link	headline	category	short_description	authors	date
+0	https://www.huffpost.com/entry/covid-boosters-...	Over 4 Million Americans Roll Up Sleeves For O...	U.S. NEWS	Health experts said it is too early to predict...	Carla K. Johnson, AP	2022-09-23
+1	https://www.huffpost.com/entry/american-airlin...	American Airlines Flyer Charged, Banned For Li...	U.S. NEWS	He was subdued by passengers and crew when he ...	Mary Papenfuss	2022-09-23
+2	https://www.huffpost.com/entry/funniest-tweets...	23 Of The Funniest Tweets About Cats And Dogs ...	COMEDY	"Until you have a dog you don't understand wha...	Elyse Wanshel	2022-09-23
+3	https://www.huffpost.com/entry/funniest-parent...	The Funniest Tweets From Parents This Week (Se...	PARENTING	"Accidentally put grown-up toothpaste on my to...	Caroline Bologna	2022-09-23
+4	https://www.huffpost.com/entry/amy-cooper-lose...	Woman Who Called Cops On Black Bird-Watcher Lo...	U.S. NEWS	Amy Cooper accused investment firm Franklin Te...	Nina Golgowski	2022-09-22
+#check the distribution of labels 
+df.category.value_counts()
+POLITICS          35602
+WELLNESS          17945
+ENTERTAINMENT     17362
+TRAVEL             9900
+STYLE & BEAUTY     9814
+PARENTING          8791
+HEALTHY LIVING     6694
+QUEER VOICES       6347
+FOOD & DRINK       6340
+BUSINESS           5992
+COMEDY             5400
+SPORTS             5077
+BLACK VOICES       4583
+HOME & LIVING      4320
+PARENTS            3955
+THE WORLDPOST      3664
+WEDDINGS           3653
+WOMEN              3572
+CRIME              3562
+IMPACT             3484
+DIVORCE            3426
+WORLD NEWS         3299
+MEDIA              2944
+WEIRD NEWS         2777
+GREEN              2622
+WORLDPOST          2579
+RELIGION           2577
+STYLE              2254
+SCIENCE            2206
+TECH               2104
+TASTE              2096
+MONEY              1756
+ARTS               1509
+ENVIRONMENT        1444
+FIFTY              1401
+GOOD NEWS          1398
+U.S. NEWS          1377
+ARTS & CULTURE     1339
+COLLEGE            1144
+LATINO VOICES      1130
+CULTURE & ARTS     1074
+EDUCATION          1014
+Name: category, dtype: int64
+#Add the new column "label_num" which gives a unique number to each of these labels 
+target = {'POLITICS':0,
+'WELLNESS':1,
+'ENTERTAINMENT':2,
+'TRAVEL':3,
+'STYLE & BEAUTY':4,
+'PARENTING':5,
+'HEALTHY LIVING':6,
+'QUEER VOICES':7,
+'FOOD & DRINK':8,
+'BUSINESS':9,
+'COMEDY':10,
+'SPORTS':11,
+'BLACK VOICES':12,
+'HOME & LIVING':13,
+'PARENTS':14,
+'THE WORLDPOST':15,
+'WEDDINGS':16,
+'WOMEN':17,
+'CRIME':18,
+'IMPACT':19,
+'DIVORCE':20,
+'WORLD NEWS':21,
+'MEDIA':22,
+'WEIRD NEWS':23,
+'GREEN':24,
+'WORLDPOST':25,
+'RELIGION':26,
+'STYLE':27,
+'SCIENCE':28,
+'TECH':29,
+'TASTE':30,
+'MONEY':31,
+'ARTS':32,
+'ENVIRONMENT':33,
+'FIFTY':34,
+'GOOD NEWS':35,
+'U.S. NEWS':36,
+'ARTS & CULTURE':37,
+'COLLEGE':38,
+'LATINO VOICES':39,      
+'CULTURE & ARTS':40,     
+'EDUCATION':41}
+​
+df["label_num"] = df["category"].map(target)
+​
+#check the results with top 5 rows
+df.head()
+link	headline	category	short_description	authors	date	label_num
+0	https://www.huffpost.com/entry/covid-boosters-...	Over 4 Million Americans Roll Up Sleeves For O...	U.S. NEWS	Health experts said it is too early to predict...	Carla K. Johnson, AP	2022-09-23	36
+1	https://www.huffpost.com/entry/american-airlin...	American Airlines Flyer Charged, Banned For Li...	U.S. NEWS	He was subdued by passengers and crew when he ...	Mary Papenfuss	2022-09-23	36
+2	https://www.huffpost.com/entry/funniest-tweets...	23 Of The Funniest Tweets About Cats And Dogs ...	COMEDY	"Until you have a dog you don't understand wha...	Elyse Wanshel	2022-09-23	10
+3	https://www.huffpost.com/entry/funniest-parent...	The Funniest Tweets From Parents This Week (Se...	PARENTING	"Accidentally put grown-up toothpaste on my to...	Caroline Bologna	2022-09-23	5
+4	https://www.huffpost.com/entry/amy-cooper-lose...	Woman Who Called Cops On Black Bird-Watcher Lo...	U.S. NEWS	Amy Cooper accused investment firm Franklin Te...	Nina Golgowski	2022-09-22	36
+df_final = df[["headline","label_num"]]
+df_final.head()
+headline	label_num
+0	Over 4 Million Americans Roll Up Sleeves For O...	36
+1	American Airlines Flyer Charged, Banned For Li...	36
+2	23 Of The Funniest Tweets About Cats And Dogs ...	10
+3	The Funniest Tweets From Parents This Week (Se...	5
+4	Woman Who Called Cops On Black Bird-Watcher Lo...	36
+I am not handling the imbalance right now as it will take a lot of time
+
+Modelling without Pre-processing Text data
+
+#import train-test-split from sklearn 
+from sklearn.model_selection import train_test_split
+​
+#Do the 'train-test' splitting with test size of 20% with random state of 2022 and stratify sampling too
+X_train, X_test, y_train, y_test = train_test_split(df_final.headline, df_final.label_num, test_size = 0.2, random_state = 42)
+#print the shapes of X_train and X_test
+X_train.shape, X_test.shape
+((167621,), (41906,))
+Attempt 1 :
+
+using sklearn pipeline module create a classification pipeline to classify the Data. Note:
+
+using CountVectorizer. use KNN as the classifier with n_neighbors of 10 and metric as 'euclidean' distance. print the classification report.
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report
+#1. create a pipeline object
+clf = Pipeline([
+    ("vectoriser", CountVectorizer(ngram_range = (1,2))),
+    ("KNN",  KNeighborsClassifier(n_neighbors = 10))
+])
+​
+​
+#2. fit with X_train and y_train
+​
+clf.fit(X_train, y_train)
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.37      0.28      0.32      7155
+           1       0.11      0.66      0.20      3672
+           2       0.21      0.13      0.16      3419
+           3       0.39      0.14      0.20      2021
+           4       0.83      0.15      0.26      1975
+           5       0.08      0.27      0.12      1768
+           6       0.08      0.04      0.06      1302
+           7       0.19      0.08      0.12      1262
+           8       0.36      0.18      0.24      1270
+           9       0.47      0.07      0.12      1216
+          10       0.05      0.08      0.07      1022
+          11       0.33      0.01      0.02      1014
+          12       0.44      0.03      0.05       889
+          13       0.52      0.17      0.25       879
+          14       0.31      0.03      0.06       795
+          15       0.27      0.01      0.01       741
+          16       0.56      0.15      0.23       709
+          17       0.37      0.06      0.10       727
+          18       0.44      0.01      0.01       713
+          19       0.09      0.02      0.04       673
+          20       0.23      0.14      0.17       664
+          21       0.50      0.00      0.01       665
+          22       0.30      0.01      0.02       607
+          23       0.83      0.01      0.02       550
+          24       0.17      0.01      0.02       532
+          25       0.06      0.02      0.03       534
+          26       0.10      0.08      0.09       530
+          27       0.70      0.03      0.06       464
+          28       1.00      0.00      0.01       424
+          29       0.88      0.04      0.07       398
+          30       0.26      0.01      0.03       427
+          31       0.38      0.01      0.03       355
+          32       0.07      0.01      0.02       293
+          33       0.36      0.09      0.15       313
+          34       0.00      0.00      0.00       263
+          35       0.50      0.00      0.01       270
+          36       0.00      0.00      0.00       269
+          37       0.00      0.00      0.00       275
+          38       0.00      0.00      0.00       202
+          39       0.00      0.00      0.00       238
+          40       0.78      0.09      0.16       202
+          41       0.89      0.04      0.07       209
+
+    accuracy                           0.17     41906
+   macro avg       0.35      0.08      0.09     41906
+weighted avg       0.33      0.17      0.15     41906
+
+C:\Users\DEll\anaconda3\lib\site-packages\sklearn\metrics\_classification.py:1344: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+C:\Users\DEll\anaconda3\lib\site-packages\sklearn\metrics\_classification.py:1344: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+C:\Users\DEll\anaconda3\lib\site-packages\sklearn\metrics\_classification.py:1344: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+Attempt 2 :
+
+using the sklearn pipeline module create a classification pipeline to classify the Data. Note:
+
+using CountVectorizer. use KNN as the classifier with n_neighbors of 10 and metric as 'cosine' distance. print the classification report.
+
+#1. create a pipeline object
+clf = Pipeline([
+    ("vectoriser", CountVectorizer(ngram_range = (1,2))),
+    ("KNN",  KNeighborsClassifier(n_neighbors = 10, metric = "cosine"))
+])
+​
+​
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.48      0.80      0.60      7155
+           1       0.28      0.69      0.40      3672
+           2       0.51      0.53      0.52      3419
+           3       0.39      0.53      0.45      2021
+           4       0.65      0.55      0.60      1975
+           5       0.30      0.37      0.33      1768
+           6       0.16      0.11      0.13      1302
+           7       0.51      0.33      0.40      1262
+           8       0.47      0.48      0.47      1270
+           9       0.36      0.19      0.25      1216
+          10       0.53      0.27      0.36      1022
+          11       0.65      0.33      0.43      1014
+          12       0.44      0.19      0.26       889
+          13       0.64      0.42      0.50       879
+          14       0.29      0.12      0.17       795
+          15       0.43      0.26      0.32       741
+          16       0.63      0.44      0.52       709
+          17       0.35      0.13      0.19       727
+          18       0.46      0.40      0.43       713
+          19       0.24      0.10      0.15       673
+          20       0.58      0.36      0.45       664
+          21       0.40      0.15      0.22       665
+          22       0.64      0.22      0.32       607
+          23       0.38      0.05      0.10       550
+          24       0.30      0.11      0.16       532
+          25       0.37      0.12      0.18       534
+          26       0.46      0.15      0.22       530
+          27       0.43      0.11      0.18       464
+          28       0.57      0.16      0.25       424
+          29       0.50      0.13      0.21       398
+          30       0.28      0.05      0.09       427
+          31       0.47      0.12      0.19       355
+          32       0.24      0.06      0.10       293
+          33       0.39      0.12      0.18       313
+          34       0.28      0.05      0.08       263
+          35       0.37      0.04      0.07       270
+          36       0.24      0.03      0.05       269
+          37       0.44      0.04      0.07       275
+          38       0.41      0.13      0.20       202
+          39       0.32      0.03      0.05       238
+          40       0.75      0.16      0.27       202
+          41       0.37      0.11      0.16       209
+
+    accuracy                           0.42     41906
+   macro avg       0.43      0.23      0.27     41906
+weighted avg       0.44      0.42      0.39     41906
+
+Attempt 3 :
+
+using the sklearn pipeline module create a classification pipeline to classify the Data. Note:
+
+using CountVectorizer unigram. use Multinomial Naive Bayes as the classifier with an alpha value of 0.75. print the classification report.
+
+from sklearn.naive_bayes import MultinomialNB
+#1. create a pipeline object
+clf = Pipeline([
+    ("vectoriser", CountVectorizer(ngram_range = (1,1))),
+    ("NB",  MultinomialNB(alpha = 0.75))
+])
+
+
+
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+
+
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+
+
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+from sklearn.naive_bayes import MultinomialNB
+#1. create a pipeline object
+clf = Pipeline([
+    ("vectoriser", CountVectorizer(ngram_range = (1,1))),
+    ("NB",  MultinomialNB(alpha = 0.75))
+])
+​
+​
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.54      0.91      0.68      7155
+           1       0.42      0.82      0.56      3672
+           2       0.48      0.79      0.60      3419
+           3       0.59      0.76      0.67      2021
+           4       0.63      0.79      0.70      1975
+           5       0.43      0.59      0.50      1768
+           6       0.33      0.08      0.12      1302
+           7       0.66      0.51      0.58      1262
+           8       0.64      0.66      0.65      1270
+           9       0.53      0.34      0.41      1216
+          10       0.56      0.29      0.38      1022
+          11       0.70      0.55      0.62      1014
+          12       0.57      0.22      0.32       889
+          13       0.78      0.57      0.66       879
+          14       0.53      0.07      0.12       795
+          15       0.46      0.36      0.40       741
+          16       0.85      0.49      0.62       709
+          17       0.61      0.12      0.21       727
+          18       0.50      0.58      0.54       713
+          19       0.39      0.10      0.15       673
+          20       0.90      0.48      0.62       664
+          21       0.49      0.23      0.31       665
+          22       0.76      0.19      0.30       607
+          23       0.52      0.14      0.22       550
+          24       0.37      0.10      0.15       532
+          25       0.48      0.04      0.08       534
+          26       0.72      0.15      0.24       530
+          27       0.67      0.01      0.03       464
+          28       0.76      0.29      0.42       424
+          29       0.76      0.17      0.28       398
+          30       0.73      0.02      0.04       427
+          31       0.77      0.08      0.14       355
+          32       0.62      0.04      0.08       293
+          33       0.93      0.04      0.08       313
+          34       0.00      0.00      0.00       263
+          35       0.67      0.04      0.08       270
+          36       0.75      0.01      0.02       269
+          37       0.25      0.01      0.01       275
+          38       0.67      0.01      0.02       202
+          39       0.67      0.02      0.03       238
+          40       0.87      0.10      0.18       202
+          41       0.75      0.01      0.03       209
+
+    accuracy                           0.53     41906
+   macro avg       0.60      0.28      0.31     41906
+weighted avg       0.56      0.53      0.47     41906
+
+Use text pre-processing to remove stop words, punctuations and apply lemmatization
+
+#use this utility function to get the preprocessed text data
+​
+import spacy
+​
+# load english language model and create nlp object from it
+nlp = spacy.load("en_core_web_sm") 
+​
+def preprocess(text):
+    # remove stop words and lemmatize the text
+    doc = nlp(text)
+    filtered_tokens = []
+    for token in doc:
+        if token.is_stop or token.is_punct:
+            continue
+        filtered_tokens.append(token.lemma_)
+    
+    return " ".join(filtered_tokens) 
+df_final.head()
+headline	label_num
+0	Over 4 Million Americans Roll Up Sleeves For O...	36
+1	American Airlines Flyer Charged, Banned For Li...	36
+2	23 Of The Funniest Tweets About Cats And Dogs ...	10
+3	The Funniest Tweets From Parents This Week (Se...	5
+4	Woman Who Called Cops On Black Bird-Watcher Lo...	36
+line
+# create a new column "preprocessed_txt" and use the utility function above to get the clean data
+# this will take some time, please be patient
+df_final["preprocessed_txt"] = df_final["headline"].apply(preprocess)
+C:\Users\DEll\AppData\Local\Temp\ipykernel_17344\3534350830.py:3: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df_final["preprocessed_txt"] = df_final["headline"].apply(preprocess)
+#print the top 5 rows
+df_final.head()
+headline	label_num	preprocessed_txt
+0	Over 4 Million Americans Roll Up Sleeves For O...	36	4 million Americans roll Sleeves Omicron targe...
+1	American Airlines Flyer Charged, Banned For Li...	36	American Airlines Flyer charge ban Life Punchi...
+2	23 Of The Funniest Tweets About Cats And Dogs ...	10	23 Funniest Tweets Cats Dogs Week Sept. 17 23
+3	The Funniest Tweets From Parents This Week (Se...	5	Funniest Tweets Parents Week Sept. 17 23
+4	Woman Who Called Cops On Black Bird-Watcher Lo...	36	woman call cop Black Bird Watcher lose Lawsuit...
+Build a model with pre processed text
+
+#Do the 'train-test' splitting with test size of 20% with random state of 2022 and stratify sampling too
+#Note: Make sure to use only the "preprocessed_txt" column for splitting
+X_train, X_test, y_train, y_test = train_test_split(df_final.preprocessed_txt, df_final.label_num, test_size = 0.2, random_state = 2022, stratify = df_final)
+
+Let's check the scores with our best model till now
+​
+from sklearn.naive_bayes import MultinomialNB
+#1. create a pipeline object
+clf = Pipeline([
+    ("vectoriser", CountVectorizer(ngram_range = (1,1))),
+    ("NB",  MultinomialNB(alpha = 0.75))
+])
+​
+​
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.54      0.91      0.68      7155
+           1       0.42      0.82      0.56      3672
+           2       0.48      0.79      0.60      3419
+           3       0.59      0.76      0.67      2021
+           4       0.63      0.79      0.70      1975
+           5       0.43      0.59      0.50      1768
+           6       0.33      0.08      0.12      1302
+           7       0.66      0.51      0.58      1262
+           8       0.64      0.66      0.65      1270
+           9       0.53      0.34      0.41      1216
+          10       0.56      0.29      0.38      1022
+          11       0.70      0.55      0.62      1014
+          12       0.57      0.22      0.32       889
+          13       0.78      0.57      0.66       879
+          14       0.53      0.07      0.12       795
+          15       0.46      0.36      0.40       741
+          16       0.85      0.49      0.62       709
+          17       0.61      0.12      0.21       727
+          18       0.50      0.58      0.54       713
+          19       0.39      0.10      0.15       673
+          20       0.90      0.48      0.62       664
+          21       0.49      0.23      0.31       665
+          22       0.76      0.19      0.30       607
+          23       0.52      0.14      0.22       550
+          24       0.37      0.10      0.15       532
+          25       0.48      0.04      0.08       534
+          26       0.72      0.15      0.24       530
+          27       0.67      0.01      0.03       464
+          28       0.76      0.29      0.42       424
+          29       0.76      0.17      0.28       398
+          30       0.73      0.02      0.04       427
+          31       0.77      0.08      0.14       355
+          32       0.62      0.04      0.08       293
+          33       0.93      0.04      0.08       313
+          34       0.00      0.00      0.00       263
+          35       0.67      0.04      0.08       270
+          36       0.75      0.01      0.02       269
+          37       0.25      0.01      0.01       275
+          38       0.67      0.01      0.02       202
+          39       0.67      0.02      0.03       238
+          40       0.87      0.10      0.18       202
+          41       0.75      0.01      0.03       209
+
+    accuracy                           0.53     41906
+   macro avg       0.60      0.28      0.31     41906
+weighted avg       0.56      0.53      0.47     41906
