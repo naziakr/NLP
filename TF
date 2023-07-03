@@ -1,0 +1,389 @@
+TF-IDF: Exercises Humans 👦 show different emotions/feelings based on the situations and communicate them through facial expressions or in form of words.
+
+In Social Media like Twitter and Instagram, many people express their views through comments about a particular event/scenario and these comments may address the feelings like sadness, happiness, joy, sarcasm, fear, and many other.
+
+For a given comment/text, we are going to use classical NLP techniques and classify under which emotion that particular comment belongs!
+
+We are going to use techniques like Bag of grams, n-grams, TF-IDF, etc. for text representation and apply different classification algorithms.
+
+About Data: Emotion Detection Credits: https://www.kaggle.com/datasets/praveengovi/emotions-dataset-for-nlp
+
+This data consists of two columns. - Comment - Emotion
+
+Comment are the statements or messages regarding to a particular event/situation.
+
+Emotion feature tells whether the given comment is fear 😨, Anger 😡, Joy 😂.
+
+As there are only 3 classes, this problem comes under the Multi-Class Classification.
+
+#import pandas library
+import pandas as pd
+​
+#read the dataset and store it in a variable df
+df = pd.read_csv("Emotions_classify_data.txt", sep = ";")
+​
+#print the shape of dataframe
+df.shape
+​
+#print top 5 rows
+df.head()
+Statement	feeling
+0	i didnt feel humiliated	sadness
+1	i can go from feeling so hopeless to so damned...	sadness
+2	im grabbing a minute to post i feel greedy wrong	anger
+3	i am ever feeling nostalgic about the fireplac...	love
+4	i am feeling grouchy	anger
+#check the distribution of Emotion
+df["feeling"].value_counts()
+joy         5362
+sadness     4666
+anger       2159
+fear        1937
+love        1304
+surprise     572
+Name: feeling, dtype: int64
+#Add the new column "Emotion_num" which gives a unique number to each of these Emotions
+df["Emotion_num"] = df["feeling"].map({
+    "joy":0,
+    "sadness":1,
+    "anger":2,
+    "fear":3,
+    "love":4,
+    "surprise":5
+    
+    
+})
+​
+​
+#checking the results by printing top 5 rows
+df.head()
+Statement	feeling	Emotion_num
+0	i didnt feel humiliated	sadness	1
+1	i can go from feeling so hopeless to so damned...	sadness	1
+2	im grabbing a minute to post i feel greedy wrong	anger	2
+3	i am ever feeling nostalgic about the fireplac...	love	4
+4	i am feeling grouchy	anger	2
+Modelling without Pre-processing Text data
+
+#import train-test split
+from sklearn.model_selection import train_test_split
+​
+#Do the 'train-test' splitting with test size of 20%
+​
+#Note: Give Random state 2022 
+​
+X_train, X_test, y_train, y_test = train_test_split(df.Statement, df.Emotion_num, test_size = 0.2, random_state = 2022)
+X
+#print the shapes of X_train and X_test
+X_train.shape, X_test.shape
+((12800,), (3200,))
+Attempt 1 :
+​
+using the sklearn pipeline module create a classification pipeline to classify the Data.
+Note:
+​
+using CountVectorizer.
+use RandomForest as the classifier.
+print the classification report.
+clf = Pipeline([
+    ("vectorizer", CountVectorizer()),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+#import CountVectorizer, RandomForest, pipeline, classification_report from sklearn 
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import classification_report
+​
+#1. create a pipeline object
+clf = Pipeline([
+    ("vectorizer", CountVectorizer()),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+​
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.80      0.92      0.85      1054
+           1       0.88      0.86      0.87       911
+           2       0.87      0.79      0.83       448
+           3       0.86      0.78      0.82       390
+           4       0.81      0.71      0.76       262
+           5       0.87      0.70      0.78       135
+
+    accuracy                           0.84      3200
+   macro avg       0.85      0.79      0.82      3200
+weighted avg       0.84      0.84      0.84      3200
+
+Attempt 2 :
+
+using the sklearn pipeline module create a classification pipeline to classify the Data. Note:
+
+using CountVectorizer. use Multinomial Naive Bayes as the classifier. print the classification report.
+
+#import MultinomialNB from sklearn
+from sklearn.naive_bayes import MultinomialNB
+​
+​
+#1. create a pipeline object
+clf = Pipeline([
+    ("vectorizer", CountVectorizer()),
+    ("nb", (MultinomialNB()))
+     ])
+​
+​
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.80      0.92      0.85      1054
+           1       0.88      0.86      0.87       911
+           2       0.87      0.79      0.83       448
+           3       0.86      0.78      0.82       390
+           4       0.81      0.71      0.76       262
+           5       0.87      0.70      0.78       135
+
+    accuracy                           0.84      3200
+   macro avg       0.85      0.79      0.82      3200
+weighted avg       0.84      0.84      0.84      3200
+
+Attempt 3 :
+​
+using the sklearn pipeline module create a classification pipeline to classify the Data.
+Note:
+​
+using CountVectorizer with both unigram and Bigrams.
+use RandomForest as the classifier.
+print the classification report.
+clf = Pipeline([
+    ("vectorizer", CountVectorizer(ngram_range = (1,2))),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+
+
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+#1. create a pipeline object
+​
+clf = Pipeline([
+    ("vectorizer", CountVectorizer(ngram_range = (1,2))),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.80      0.92      0.85      1054
+           1       0.88      0.86      0.87       911
+           2       0.87      0.79      0.83       448
+           3       0.86      0.78      0.82       390
+           4       0.81      0.71      0.76       262
+           5       0.87      0.70      0.78       135
+
+    accuracy                           0.84      3200
+   macro avg       0.85      0.79      0.82      3200
+weighted avg       0.84      0.84      0.84      3200
+
+Attempt 4 :
+​
+using the sklearn pipeline module create a classification pipeline to classify the Data.
+Note:
+​
+using TF-IDF vectorizer for Pre-processing the text.
+use RandomForest as the classifier.
+print the classification report.
+
+clf = Pipeline([
+    ("Tfidvectorizer", TfidfVectorizer()),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+
+
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+#import TfidfVectorizer from sklearn
+from sklearn.feature_extraction.text import TfidfVectorizer
+​
+​
+clf = Pipeline([
+    ("Tfidvectorizer", TfidfVectorizer()),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.80      0.92      0.85      1054
+           1       0.88      0.86      0.87       911
+           2       0.87      0.79      0.83       448
+           3       0.86      0.78      0.82       390
+           4       0.81      0.71      0.76       262
+           5       0.87      0.70      0.78       135
+
+    accuracy                           0.84      3200
+   macro avg       0.85      0.79      0.82      3200
+weighted avg       0.84      0.84      0.84      3200
+
+Use text pre-processing to remove stop words, punctuations and apply lemmatization
+
+import spacy
+​
+# load english language model and create nlp object from it
+nlp = spacy.load("en_core_web_sm") 
+​
+​
+#use this utility function to get the preprocessed text data
+def preprocess(text):
+    # remove stop words and lemmatize the text
+    doc = nlp(text)
+    filtered_tokens = []
+    for token in doc:
+        if token.is_stop or token.is_punct:
+            continue
+        filtered_tokens.append(token.lemma_)
+    
+    return " ".join(filtered_tokens) 
+preprocess
+# create a new column "preprocessed_comment" and use the utility function above to get the clean data
+# this will take some time, please be patient
+df["preprocessed_comment"] = df["Statement"].apply(preprocess)
+Build a model with pre processed text
+
+22
+#Do the 'train-test' splitting with test size of 20% with random state of 2022 
+X_train, X_test, y_train, y_test = train_test_split(df.preprocessed_comment, df.Emotion_num, test_size = 0.2, random_state = 2022)
+​
+Let's check the scores with our best model till now
+
+Random Forest Attempt1 :
+
+using the sklearn pipeline module create a classification pipeline to classify the Data. Note:
+
+using CountVectorizer with both unigrams and bigrams. use RandomForest as the classifier. print the classification report.
+
+#1. create a pipeline object
+​
+clf = Pipeline([
+    ("vectorizer", CountVectorizer(ngram_range = (1,2))),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.80      0.92      0.85      1054
+           1       0.88      0.86      0.87       911
+           2       0.87      0.79      0.83       448
+           3       0.86      0.78      0.82       390
+           4       0.81      0.71      0.76       262
+           5       0.87      0.70      0.78       135
+
+    accuracy                           0.84      3200
+   macro avg       0.85      0.79      0.82      3200
+weighted avg       0.84      0.84      0.84      3200
+
+Attempt 2 :
+
+using the sklearn pipeline module create a classification pipeline to classify the data. Note:
+
+using TF-IDF vectorizer for pre-processing the text. use RandomForest as the classifier. print the classification report.
+
+#1. create a pipeline object
+
+clf = Pipeline([
+    ("Tfidvectorizer", TfidfVectorizer()),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+
+
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+#1. create a pipeline object
+​
+clf = Pipeline([
+    ("Tfidvectorizer", TfidfVectorizer()),
+    ("rfc", (RandomForestClassifier(n_estimators=50, criterion='entropy')))
+])
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred - clf.predict(X_test)
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.80      0.92      0.85      1054
+           1       0.88      0.86      0.87       911
+           2       0.87      0.79      0.83       448
+           3       0.86      0.78      0.82       390
+           4       0.81      0.71      0.76       262
+           5       0.87      0.70      0.78       135
+
+    accuracy                           0.84      3200
+   macro avg       0.85      0.79      0.82      3200
+weighted avg       0.84      0.84      0.84      3200
+
