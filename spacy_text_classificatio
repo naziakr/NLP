@@ -1,0 +1,282 @@
+spacy_text_classification : Exercise In this exercise, you are going to classify whether a given text belongs to one of possible classes.
+
+you are going to use spacy for pre-processing the text, convert text to numbers and apply different classification algorithms.
+
+#import spacy and load the language model downloaded
+import spacy
+nlp = spacy.load("en_core_web_lg")
+About Data: News Category Classifier
+Credits: https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset
+​
+Text are the description about a particular topic.
+Category determine which class the text belongs to.
+​
+import pandas as pd
+df_true = pd.read_csv("True.csv")
+df_fake = pd.read_csv("Fake.csv")
+df_true["true"] = 0
+df_fake["true"] = 1
+df = pd.concat([df_true, df_fake])
+df.head()
+title	text	subject	date	true
+0	As U.S. budget fight looms, Republicans flip t...	WASHINGTON (Reuters) - The head of a conservat...	politicsNews	December 31, 2017	0
+1	U.S. military to accept transgender recruits o...	WASHINGTON (Reuters) - Transgender people will...	politicsNews	December 29, 2017	0
+2	Senior U.S. Republican senator: 'Let Mr. Muell...	WASHINGTON (Reuters) - The special counsel inv...	politicsNews	December 31, 2017	0
+3	FBI Russia probe helped by Australian diplomat...	WASHINGTON (Reuters) - Trump campaign adviser ...	politicsNews	December 30, 2017	0
+4	Trump wants Postal Service to charge 'much mor...	SEATTLE/WASHINGTON (Reuters) - President Donal...	politicsNews	December 29, 2017	0
+#check the distribution of labels 
+df["subject"].value_counts()
+politicsNews       11272
+worldnews          10145
+News                9050
+politics            6841
+left-news           4459
+Government News     1570
+US_News              783
+Middle-east          778
+Name: subject, dtype: int64
+#Add the new column "label_num" which gives a unique number to each of these labels 
+df["label_num"] = df["subject"].map({
+   "politicsNews":1,
+"worldnews":2,
+"News":3,
+"politics":4,            
+"left-news":5,           
+"Government News":6,    
+"US_News":7,             
+"Middle-east":8    
+    
+    
+})
+​
+​
+​
+#check the results with top 5 rows
+df.head()
+title	text	subject	date	true	label_num
+0	As U.S. budget fight looms, Republicans flip t...	WASHINGTON (Reuters) - The head of a conservat...	politicsNews	December 31, 2017	0	1
+1	U.S. military to accept transgender recruits o...	WASHINGTON (Reuters) - Transgender people will...	politicsNews	December 29, 2017	0	1
+2	Senior U.S. Republican senator: 'Let Mr. Muell...	WASHINGTON (Reuters) - The special counsel inv...	politicsNews	December 31, 2017	0	1
+3	FBI Russia probe helped by Australian diplomat...	WASHINGTON (Reuters) - Trump campaign adviser ...	politicsNews	December 30, 2017	0	1
+4	Trump wants Postal Service to charge 'much mor...	SEATTLE/WASHINGTON (Reuters) - President Donal...	politicsNews	December 29, 2017	0	1
+5	White House, Congress prepare for talks on spe...	WEST PALM BEACH, Fla./WASHINGTON (Reuters) - T...	politicsNews	December 29, 2017	0	1
+6	Trump says Russia probe will be fair, but time...	WEST PALM BEACH, Fla (Reuters) - President Don...	politicsNews	December 29, 2017	0	1
+7	Factbox: Trump on Twitter (Dec 29) - Approval ...	The following statements were posted to the ve...	politicsNews	December 29, 2017	0	1
+8	Trump on Twitter (Dec 28) - Global Warming	The following statements were posted to the ve...	politicsNews	December 29, 2017	0	1
+9	Alabama official to certify Senator-elect Jone...	WASHINGTON (Reuters) - Alabama Secretary of St...	politicsNews	December 28, 2017	0	1
+df.tail()
+title	text	subject	date	true	label_num
+23476	McPain: John McCain Furious That Iran Treated ...	21st Century Wire says As 21WIRE reported earl...	Middle-east	January 16, 2016	1	8
+23477	JUSTICE? Yahoo Settles E-mail Privacy Class-ac...	21st Century Wire says It s a familiar theme. ...	Middle-east	January 16, 2016	1	8
+23478	Sunnistan: US and Allied ‘Safe Zone’ Plan to T...	Patrick Henningsen 21st Century WireRemember ...	Middle-east	January 15, 2016	1	8
+23479	How to Blow $700 Million: Al Jazeera America F...	21st Century Wire says Al Jazeera America will...	Middle-east	January 14, 2016	1	8
+23480	10 U.S. Navy Sailors Held by Iranian Military ...	21st Century Wire says As 21WIRE predicted in ...	Middle-east	January 12, 2016	1	8
+#1. Remove the stop words
+#2. Convert to base form using lemmatisation
+​
+def preprocess(text):
+    doc = nlp(text)
+    filtered_tokens = []
+    for token in doc:
+        if token.is_stop or token.is_punct:
+            continue
+        filtered_tokens.append(token.lemma_)
+    return ' '.join(filtered_tokens)
+preprocess
+#create a new column "preprocessed_text" which store the clean form of given text [use apply and lambda function]
+​
+df["preprocessed_text"] = df["text"].apply(lambda text: preprocess(text))
+#print the top 5 rows
+Get the spacy embeddings for each preprocessed text
+
+#create a new column "vector" that store the vector representation of each pre-processed text
+​
+df['vector'] = df['preprocessed_text'].apply(lambda text: nlp(text).vector) 
+#print the top 5 rows
+Train-Test splitting
+
+from sklearn.model_selection import train_test_split
+​
+​
+#Do the 'train-test' splitting with test size of 20% with random state of 2022
+X_train, X_test, y_train, y_test = train_test_split(
+    df.vector.values, 
+    df.label_num, 
+    test_size=0.2, # 20% samples will go to test dataset
+    random_state=2022,
+    
+)
+Reshape the X_train and X_test so as to fit for models
+import numpy as np
+​
+print("Shape of X_train before reshaping: ", X_train.shape)
+print("Shape of X_test before reshaping: ", X_test.shape)
+​
+​
+X_train_2d = np.stack(X_train)
+X_test_2d =  np.stack(X_test)
+​
+print("Shape of X_train after reshaping: ", X_train_2d.shape)
+print("Shape of X_test after reshaping: ", X_test_2d.shape)
+Shape of X_train before reshaping:  (35918,)
+Shape of X_test before reshaping:  (8980,)
+Shape of X_train after reshaping:  (35918, 300)
+Shape of X_test after reshaping:  (8980, 300)
+Attempt 1:
+
+use spacy glove embeddings for text vectorization.
+
+use Decision Tree as the classifier.
+
+print the classification report.
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report
+​
+#1. creating a Decision Tree model object
+clf = DecisionTreeClassifier()
+​
+#2. fit with all_train_embeddings and y_train
+clf.fit(X_train_2d, y_train)
+​
+​
+#3. get the predictions for all_test_embeddings and store it in y_pred
+y_pred = clf.predict(X_test_2d)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           1       0.87      0.86      0.87      2166
+           2       0.85      0.80      0.83      2040
+           3       0.76      0.66      0.71      1841
+           4       0.18      0.24      0.20      1378
+           5       0.03      0.03      0.03       891
+           6       0.04      0.02      0.03       325
+           7       0.04      0.06      0.05       169
+           8       0.01      0.01      0.01       170
+
+    accuracy                           0.57      8980
+   macro avg       0.35      0.34      0.34      8980
+weighted avg       0.59      0.57      0.58      8980
+
+Attempt 2:
+
+use spacy glove embeddings for text vectorization. use MultinomialNB as the classifier after applying the MinMaxscaler. print the classification report.
+
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import MinMaxScaler
+​
+​
+​
+​
+#doing scaling because Negative values will not pass into Naive Bayes models
+scaler = MinMaxScaler()                                         
+scaled_train_embed = scaler.fit_transform(X_train_2d)
+scaled_test_embed = scaler.transform(X_test_2d)
+​
+#1. creating a MultinomialNB model object 
+clf = MultinomialNB()
+​
+#2. fit with all_train_embeddings and y_train
+clf.fit(scaled_train_embed , y_train) 
+​
+​
+#3. get the predictions for all_test_embeddings and store it in y_pred
+y_pred = clf.predict(scaled_test_embed)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           1       0.57      0.95      0.71      2166
+           2       0.69      0.77      0.73      2040
+           3       0.50      0.77      0.61      1841
+           4       0.49      0.10      0.17      1378
+           5       0.00      0.00      0.00       891
+           6       0.00      0.00      0.00       325
+           7       0.00      0.00      0.00       169
+           8       0.00      0.00      0.00       170
+
+    accuracy                           0.58      8980
+   macro avg       0.28      0.32      0.28      8980
+weighted avg       0.47      0.58      0.49      8980
+
+C:\Users\DEll\anaconda3\lib\site-packages\sklearn\metrics\_classification.py:1344: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+C:\Users\DEll\anaconda3\lib\site-packages\sklearn\metrics\_classification.py:1344: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+C:\Users\DEll\anaconda3\lib\site-packages\sklearn\metrics\_classification.py:1344: UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.
+  _warn_prf(average, modifier, msg_start, len(result))
+Attempt 3:
+
+use spacy glove embeddings for text vectorization. use KNeighborsClassifier as the classifier after applying the MinMaxscaler. print the classification report.
+
+from  sklearn.neighbors import KNeighborsClassifier
+​
+​
+#1. creating a KNN model object
+clf = KNeighborsClassifier(n_neighbors = 5, metric = 'euclidean')
+​
+#2. fit with all_train_embeddings and y_train
+clf.fit(X_train_2d, y_train)
+​
+​
+#3. get the predictions for all_test_embeddings and store it in y_pred
+y_pred = clf.predict(X_test_2d)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           1       0.86      0.97      0.91      2166
+           2       0.90      0.94      0.92      2040
+           3       0.65      0.82      0.73      1841
+           4       0.36      0.33      0.34      1378
+           5       0.18      0.07      0.10       891
+           6       0.16      0.03      0.06       325
+           7       0.15      0.19      0.17       169
+           8       0.14      0.14      0.14       170
+
+    accuracy                           0.68      8980
+   macro avg       0.42      0.44      0.42      8980
+weighted avg       0.63      0.68      0.65      8980
+
+Attempt 4:
+
+use spacy glove embeddings for text vectorization. use RandomForestClassifier as the classifier after applying the MinMaxscaler. print the classification report.
+
+from sklearn.ensemble import RandomForestClassifier
+​
+​
+#1. creating a Random Forest model object
+clf = RandomForestClassifier()
+​
+​
+#2. fit with all_train_embeddings and y_train
+clf.fit(X_train_2d, y_train)
+​
+​
+#3. get the predictions for all_test_embeddings and store it in y_pred
+y_pred = clf.predict(X_test_2d)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           1       0.91      0.96      0.94      2166
+           2       0.90      0.95      0.93      2040
+           3       0.82      0.90      0.86      1841
+           4       0.27      0.27      0.27      1378
+           5       0.05      0.04      0.04       891
+           6       0.02      0.01      0.02       325
+           7       0.03      0.02      0.03       169
+           8       0.05      0.05      0.05       170
+
+    accuracy                           0.68      8980
+   macro avg       0.38      0.40      0.39      8980
+weighted avg       0.64      0.68      0.66      8980
