@@ -148,7 +148,7 @@ clf.fit(X_train, y_train)
 ​
 ​
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 ​
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
@@ -183,7 +183,7 @@ clf.fit(X_train, y_train)
 
 
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
@@ -199,7 +199,7 @@ clf.fit(X_train, y_train)
 ​
 ​
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 ​
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
@@ -235,7 +235,7 @@ clf.fit(X_train, y_train)
 
 
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
@@ -253,7 +253,7 @@ clf.fit(X_train, y_train)
 ​
 ​
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 ​
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
@@ -319,7 +319,7 @@ clf.fit(X_train, y_train)
 ​
 ​
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 ​
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
@@ -354,7 +354,7 @@ clf.fit(X_train, y_train)
 
 
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
@@ -370,7 +370,7 @@ clf.fit(X_train, y_train)
 ​
 ​
 #3. get the predictions for X_test and store it in y_pred
-y_pred - clf.predict(X_test)
+y_pred = clf.predict(X_test)
 ​
 #4. print the classfication report
 print(classification_report(y_test, y_pred))
