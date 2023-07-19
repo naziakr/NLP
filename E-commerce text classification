@@ -1,0 +1,234 @@
+
+​
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+​
+​
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+
+df = pd.read_csv("/kaggle/input/ecommerce-text-classification/ecommerceDataset.csv", sep = ",", names = ["Class", "text"])
+
+Inspect the data
+df.head()
+
+0	Household	Paper Plane Design Framed Wall Hanging Motivat...
+1	Household	SAF 'Floral' Framed Painting (Wood, 30 inch x ...
+2	Household	SAF 'UV Textured Modern Art Print Framed' Pain...
+3	Household	SAF Flower Print Framed Painting (Synthetic, 1...
+4	Household	Incredible Gifts India Wooden Happy Birthday U...
+
+Check for imbalances
+df.Class.value_counts()
+Household                 19313
+Books                     11820
+Electronics               10621
+Clothing & Accessories     8671
+Name: Class, dtype: int64
+
+As the models work with numbers and not text when it comes to classification target, provide numerical value for each class
+
+df["class_num"] = df.Class.map({
+"Household" :0,               
+"Books":1,                  
+"Electronics":2,              
+"Clothing & Accessories":3,
+    
+})
+
+df.head()
+
+0	Household	Paper Plane Design Framed Wall Hanging Motivat...	0
+1	Household	SAF 'Floral' Framed Painting (Wood, 30 inch x ...	0
+2	Household	SAF 'UV Textured Modern Art Print Framed' Pain...	0
+3	Household	SAF Flower Print Framed Painting (Synthetic, 1...	0
+4	Household	Incredible Gifts India Wooden Happy Birthday U...	0
+
+df.tail()
+
+50420	Electronics	Strontium MicroSD Class 10 8GB Memory Card (Bl...	2
+50421	Electronics	CrossBeats Wave Waterproof Bluetooth Wireless ...	2
+50422	Electronics	Karbonn Titanium Wind W4 (White) Karbonn Titan...	2
+50423	Electronics	Samsung Guru FM Plus (SM-B110E/D, Black) Colou...	2
+50424	Electronics	Micromax Canvas Win W121 (White)	2
+
+There are all types of elements - string, numbers, float, integer, therefore, to unify the text and avoid any error during processing, convert the text to string
+
+df["text"] = df["text"].astype(str)
+
+Clean the data
+Remove punctuations and stop words
+
+#use this utility function to get the preprocessed text data
+
+import spacy
+​
+# load english language model and create nlp object from it
+nlp = spacy.load("en_core_web_sm") 
+​
+def preprocess(text):
+    # remove stop words and lemmatize the text
+    doc = nlp(text)
+    filtered_tokens = []
+    for token in doc:
+        if token.is_stop or token.is_punct:
+            continue
+        filtered_tokens.append(token)
+        
+    
+    return " ".join(str(v) for v in filtered_tokens)
+
+df["processed_text"] = df["text"].apply(preprocess)
+
+df.head()
+
+0	Household	Paper Plane Design Framed Wall Hanging Motivat...	0	Paper Plane Design Framed Wall Hanging Motivat...
+1	Household	SAF 'Floral' Framed Painting (Wood, 30 inch x ...	0	SAF Floral Framed Painting Wood 30 inch x 10 i...
+2	Household	SAF 'UV Textured Modern Art Print Framed' Pain...	0	SAF UV Textured Modern Art Print Framed Painti...
+3	Household	SAF Flower Print Framed Painting (Synthetic, 1...	0	SAF Flower Print Framed Painting Synthetic 13....
+4	Household	Incredible Gifts India Wooden Happy Birthday U...	0	Incredible Gifts India Wooden Happy Birthday U...
+
+Split the data to check model score
+
+X_train, X_test, y_train, y_test = train_test_split(df.processed_text, df.class_num, test_size = 0.2, random_state = 42)
+
+Model fitting
+
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report
+from sklearn.svm import SVC
+from sklearn.feature_extraction.text import CountVectorizer
+
+
+clf = Pipeline([
+    ("vectoriser", CountVectorizer()),
+    ("svm",  SVC())
+])
+
+
+#2. fit with X_train and y_train
+
+clf.fit(X_train, y_train)
+
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+
+
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+
+              precision    recall  f1-score   support
+
+           0       0.96      0.97      0.97      3887
+           1       0.93      0.96      0.95      2387
+           2       0.97      0.94      0.95      2067
+           3       0.97      0.97      0.97      1744
+
+    accuracy                           0.96     10085
+   macro avg       0.96      0.96      0.96     10085
+weighted avg       0.96      0.96      0.96     10085
+
+
+from sklearn.naive_bayes import MultinomialNB
+​
+#1. create a pipeline object
+clf = Pipeline([
+    
+    ("vectoriser", CountVectorizer(ngram_range = (1,1))),
+    ("NB",  MultinomialNB(alpha = 0.75))
+])
+​
+​
+​
+#2. fit with X_train and y_train
+clf.fit(X_train, y_train)
+​
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.94      0.96      0.95      3887
+           1       0.97      0.92      0.94      2387
+           2       0.94      0.94      0.94      2067
+           3       0.95      0.98      0.97      1744
+
+    accuracy                           0.95     10085
+   macro avg       0.95      0.95      0.95     10085
+weighted avg       0.95      0.95      0.95     10085
+
+
+We see SVM performs better with an average accuracy of 0.96
+
+
+Handle Class imbalance
+
+As the minimum number is 8671 in the Clothes and Accessories category, we include the same number of samples for all categories
+
+min_samples = 8671 # least value count in the sample
+​
+df_household = df[df.Class=="Household"].sample(min_samples, random_state=2022)
+df_books = df[df.Class=="Books"].sample(min_samples, random_state=2022)
+df_electronics = df[df.Class=="Electronics"].sample(min_samples, random_state=2022)
+df_CandA = df[df.Class=="Clothing & Accessories"].sample(min_samples, random_state=2022)
+
+df_balanced = pd.concat([df_household,df_books,df_electronics,df_CandA],axis=0)
+df_balanced.Class.value_counts()
+Household                 8671
+Books                     8671
+Electronics               8671
+Clothing & Accessories    8671
+
+
+df_balanced.head()
+
+14609	Household	Whirlpool 1.5 Ton 3 Star Inverter Split AC (Al...	0	Whirlpool 1.5 Ton 3 Star Inverter Split AC Alu...
+11256	Household	Singhal Homeware Stainless Steel Strainer - Mi...	0	Singhal Homeware Stainless Steel Strainer Micr...
+5586	Household	Story@Home 6 Pieces 450 GSM Cotton Towel Set f...	0	Story@Home 6 Pieces 450 GSM Cotton Towel Set C...
+15412	Household	Sameer 230mm Ventilation Exhaust Fan (Black) C...	0	Sameer 230 mm Ventilation Exhaust Fan Black Co...
+14226	Household	Bosch Easy Aquatak 110 1300-Watt High Pressure...	0	Bosch Easy Aquatak 110 1300 Watt High Pressure...
+
+
+X_train, X_test, y_train, y_test = train_test_split(df_balanced.processed_text, df_balanced.class_num, test_size = 0.2, random_state = 42)
+
+Train model for balanced data
+
+Since SVM performed better previously, let us use it to check the score with balanced data
+
+​
+clf = Pipeline([
+    ("vectoriser", CountVectorizer()),
+    ("svm",  SVC())
+])
+​
+​
+#2. fit with X_train and y_train
+​
+clf.fit(X_train, y_train)
+​
+#3. get the predictions for X_test and store it in y_pred
+y_pred = clf.predict(X_test)
+​
+​
+#4. print the classfication report
+print(classification_report(y_test, y_pred))
+              precision    recall  f1-score   support
+
+           0       0.95      0.93      0.94      1764
+           1       0.91      0.97      0.94      1715
+           2       0.98      0.94      0.96      1724
+           3       0.98      0.97      0.97      1734
+
+    accuracy                           0.95      6937
+   macro avg       0.95      0.95      0.95      6937
+weighted avg       0.95      0.95      0.95      6937
+
+
+Seems like unbalanced data gives better result as compared to balanced data
